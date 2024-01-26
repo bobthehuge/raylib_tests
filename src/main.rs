@@ -2,6 +2,7 @@ mod chunks;
 
 use raylib::prelude::*;
 use raylib::ffi;
+use raylib::ffi::KeyboardKey;
 use raylib::core::text::measure_text;
 use raylib::core::texture::Image;
 
@@ -13,6 +14,7 @@ use chunks::Map;
 
 const WINDOW_WIDTH: i32 = 1920;
 const WINDOW_HEIGHT: i32 = 1080;
+const TOOLBAR_HEIGHT: i32 = 40;
 
 const EXIT_BUTTON_RECT: ffi::Rectangle = ffi::Rectangle{
     x: (WINDOW_WIDTH - 32) as f32, 
@@ -31,7 +33,7 @@ const TEST_BUTTON_RECT: ffi::Rectangle = ffi::Rectangle{
 const TOOLBAR_PAN_RECT: ffi::Rectangle = ffi::Rectangle{
     x: 0.0, 
     y: 0.0, 
-    height: 40.0,
+    height: TOOLBAR_HEIGHT as f32,
     width: WINDOW_WIDTH as f32, 
 };
 
@@ -48,6 +50,8 @@ fn main() {
         .title("Bob's Raylib Tests")
         .build();
 
+    rl.set_exit_key(None);
+
     let exit_button_image = Image::load_image("assets/EXIT_BUTTON.png")
         .unwrap();
 
@@ -57,7 +61,18 @@ fn main() {
 
     let map = Map::new(1000.0, 1000.0, 10.0);
 
+    let map_tex: Texture2D = rl.load_texture_from_image(
+        &thread,
+        &map.render_to_image(),
+    ).unwrap();
+
+    let mut state = false;
+    let greet_text = "votai.";
+    let greet_font_size: i32 = 20;
+    let greet_size = measure_text(greet_text, greet_font_size);
+
     while !rl.window_should_close() {
+
         let mut d = rl.begin_drawing(&thread);
 
         d.clear_background(Color::WHITE);
@@ -74,30 +89,38 @@ fn main() {
             exit_gui(&d, 0);
         }
 
+        d.gui_unlock();
+
         if d.gui_button(
                 TEST_BUTTON_RECT,
                 Some(&CString::new("TEST.").expect("CString::new failed")),
             ){
-            println!("YOU PRESSED ME !")
+            state = true;
         }
 
-        let greet_text = "votai.";
-        let greet_font_size: i32 = 20;
-        let greet_size = measure_text(greet_text, greet_font_size);
-
-        d.draw_text(greet_text, 
-            WINDOW_WIDTH / 2 - greet_size / 2, 
-            WINDOW_HEIGHT / 2, 
-            greet_font_size, 
-            Color::BLACK
+        d.draw_text(
+            greet_text,
+            WINDOW_WIDTH / 2 - greet_size / 2,
+            WINDOW_HEIGHT / 2 - 10,
+            greet_font_size,
+            Color::BLACK,
         );
 
-        let map_tex: Texture2D = d.load_texture_from_image(
-            &thread,
-            &map.render_to_image(),
-        ).unwrap();
-
-        d.draw_texture(map_tex, 50, 0, Color::WHITE);
+        if state {
+            if d.gui_window_box(
+                Rectangle{
+                    x: 0.0,
+                    y: TOOLBAR_HEIGHT as f32,
+                    width: 1002.0,
+                    height: 1026.0,
+                },
+                Some(&CString::new("Preview").expect("CString::new failed")),
+            ) || d.is_key_pressed(KeyboardKey::KEY_ESCAPE){
+                state = false;
+            }
+            
+            d.draw_texture(&map_tex, 1, TOOLBAR_HEIGHT + 24, Color::WHITE);
+        }
 
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
