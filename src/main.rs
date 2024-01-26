@@ -1,3 +1,5 @@
+mod chunks;
+
 use raylib::prelude::*;
 use raylib::ffi;
 use raylib::core::text::measure_text;
@@ -6,6 +8,8 @@ use raylib::core::texture::Image;
 use std::ffi::{CString};
 use std::time::Duration;
 use std::process::exit;
+
+use chunks::Map;
 
 const WINDOW_WIDTH: i32 = 1920;
 const WINDOW_HEIGHT: i32 = 1080;
@@ -51,6 +55,8 @@ fn main() {
         .load_texture_from_image(&thread, &exit_button_image)
         .unwrap();
 
+    let map = Map::new(1000.0, 1000.0, 10.0);
+
     while !rl.window_should_close() {
         let mut d = rl.begin_drawing(&thread);
 
@@ -85,6 +91,13 @@ fn main() {
             greet_font_size, 
             Color::BLACK
         );
+
+        let map_tex: Texture2D = d.load_texture_from_image(
+            &thread,
+            &map.render_to_image(),
+        ).unwrap();
+
+        d.draw_texture(map_tex, 50, 0, Color::WHITE);
 
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
