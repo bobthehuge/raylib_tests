@@ -22,6 +22,7 @@ use widgets::{
     window_box_obj::WindowBoxObj,
     button_obj::ButtonObj,
     text_obj::TextObj,
+    image_button_obj::ImageButtonObj,
 };
 
 const WINDOW_WIDTH: i32 = 1920;
@@ -51,13 +52,14 @@ fn main() {
 
     rl.set_exit_key(None);
 
-    let test_button_obj =  ButtonObj::new(
+    let mut test_button_obj =  ButtonObj::new(
         (WINDOW_WIDTH / 2 - 50) as f32, 
         (WINDOW_HEIGHT / 2 + 32) as f32, 
         100.0,
         24.0, 
         Some(CString::new("TEST.").expect("CString::new failed")),
     );
+    test_button_obj.show();
 
     let mut preview_window_obj = WindowBoxObj::new(
         0.0,
@@ -77,12 +79,17 @@ fn main() {
 
     let map = Map::new(Vector3::new(1000.0, 1000.0, 10.0), 10.0);
 
-    let exit_button_image = Image::load_image("assets/EXIT_BUTTON.png")
-        .unwrap();
-
-    let exit_button_tex = rl
-        .load_texture_from_image(&thread, &exit_button_image)
-        .unwrap();
+    let mut exit_imbutton_obj = ImageButtonObj::new(
+        (WINDOW_WIDTH - 32) as f32, 
+        8.0, 
+        24.0, 
+        24.0,
+        rl.load_texture_from_image(&thread, 
+            &Image::load_image("assets/EXIT_BUTTON.png")
+            .unwrap()
+        ).unwrap(),
+    );
+    exit_imbutton_obj.show();
 
     let map_tex: Texture2D = rl.load_texture_from_image(
         &thread,
@@ -109,11 +116,7 @@ fn main() {
             TOOLBAR_PAN_RECT
         );
 
-        if d.gui_image_button(
-                EXIT_BUTTON_RECT,
-                None,
-                &exit_button_tex
-            ){
+        if exit_imbutton_obj.render(&mut d) {
             break 'mainloop;
         }
 

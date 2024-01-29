@@ -35,10 +35,14 @@ impl ButtonObj {
     }
 
     pub fn render(&self, d: &mut RaylibDrawHandle) -> bool {
-        d.gui_button(
-            self.rect(),
-            self.text.as_deref(),
-        )
+        if self.visible {
+            d.gui_button(
+                self.rect(),
+                self.text.as_deref(),
+            )
+        } else {
+            false
+        }
     }
 }
 

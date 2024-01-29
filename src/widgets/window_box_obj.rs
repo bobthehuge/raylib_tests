@@ -44,10 +44,14 @@ impl WindowBoxObj {
     }
 
     pub fn render(&self, d: &mut RaylibDrawHandle) -> bool {
-        d.gui_window_box(
-            self.rect(),
-            self.text.as_deref(),
-        )
+        if self.visible {
+            d.gui_window_box(
+                self.rect(),
+                self.text.as_deref(),
+            )
+        } else {
+            false
+        }
     }
 }
 

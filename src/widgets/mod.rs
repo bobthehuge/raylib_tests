@@ -1,5 +1,6 @@
 pub mod window_box_obj;
 pub mod button_obj;
+pub mod image_button_obj;
 pub mod text_obj;
 
 pub trait WidgetVisibility {
