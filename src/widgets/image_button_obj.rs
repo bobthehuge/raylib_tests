@@ -19,7 +19,7 @@ impl ImageButtonObj {
             width: width,
             height: height,
             tex: tex,
-            visible: false,
+            visible: true,
             moving: false,
         }
     }
@@ -45,9 +45,11 @@ impl ImageButtonObj {
             height: self.height,
         }
     }
+}
 
-    pub fn render(&self, d: &mut RaylibDrawHandle) -> bool {
-        if self.visible {
+impl WidgetRender for ImageButtonObj {
+    fn render(&self, d: &mut RaylibDrawHandle) -> RenderResult {
+        RenderResult::BOOL(if self.visible {
             d.gui_image_button(
                 self.rect(),
                 None,
@@ -55,7 +57,7 @@ impl ImageButtonObj {
             )
         } else {
             false
-        }
+        })
     }
 }
 

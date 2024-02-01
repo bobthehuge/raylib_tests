@@ -11,14 +11,16 @@ use raylib::math::{
     Vector3,
 };
 
-use std::ffi::{CString};
+use std::ffi::{ CString };
 use std::time::Duration;
 
 use chunks::Map;
 
 use widgets::{
+    RenderResult,
     WidgetMobility,
     WidgetVisibility,
+    WidgetRender,
     window_box_obj::WindowBoxObj,
     button_obj::ButtonObj,
     text_obj::TextObj,
@@ -59,7 +61,6 @@ fn main() {
         24.0, 
         Some(CString::new("TEST.").expect("CString::new failed")),
     );
-    test_button_obj.show();
 
     let mut preview_window_obj = WindowBoxObj::new(
         0.0,
@@ -68,8 +69,9 @@ fn main() {
         1026.0,
         Some(CString::new("Preview").expect("CString::new failed")),
     );
+    preview_window_obj.hide();
 
-    let greet_text_obj = TextObj::new(
+    let mut greet_text_obj = TextObj::new(
         String::from("votai."),
         WINDOW_WIDTH / 2,
         WINDOW_HEIGHT / 2,
@@ -89,7 +91,7 @@ fn main() {
             .unwrap()
         ).unwrap(),
     );
-    exit_imbutton_obj.show();
+    // exit_imbutton_obj.show();
 
     let map_tex: Texture2D = rl.load_texture_from_image(
         &thread,
@@ -116,15 +118,17 @@ fn main() {
             TOOLBAR_PAN_RECT
         );
 
-        if exit_imbutton_obj.render(&mut d) {
-            break 'mainloop;
+        match exit_imbutton_obj.render(&mut d) {
+            RenderResult::BOOL(b) => if b { break 'mainloop; },
+            _ => {}
         }
 
-        if test_button_obj.render(&mut d) {
-            preview_window_obj.show();
+        match test_button_obj.render(&mut d) {
+            RenderResult::BOOL(b) => if b { preview_window_obj.show(); },
+            _ => {}
         }
 
-        greet_text_obj.render(&mut d, -greet_text_obj.text_width() / 2);
+        let _ = greet_text_obj.render(&mut d);
 
         if preview_window_obj.is_visible() {
             // closing mechanic
@@ -164,7 +168,6 @@ fn main() {
                 (preview_window_obj.y + preview_window_obj.header_size) as i32, 
                 Color::WHITE
             );
-
         }
 
         // refresh mouse position

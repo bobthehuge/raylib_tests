@@ -20,7 +20,7 @@ impl WindowBoxObj {
             height: height,
             header_size: 24.0,
             text: text,
-            visible: false,
+            visible: true,
             moving: false,
         }
     }

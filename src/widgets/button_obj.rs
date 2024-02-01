@@ -1,4 +1,6 @@
 use crate::*;
+use crate::widgets::RenderResult;
+
 use std::ffi::{CString};
 
 pub struct ButtonObj {
@@ -20,7 +22,7 @@ impl ButtonObj {
             width: width,
             height: height,
             text: text,
-            visible: false,
+            visible: true,
             moving: false,
         }
     }
@@ -33,16 +35,18 @@ impl ButtonObj {
             height: self.height,
         }
     }
+}
 
-    pub fn render(&self, d: &mut RaylibDrawHandle) -> bool {
-        if self.visible {
+impl WidgetRender for ButtonObj {
+    fn render(&self, d: &mut RaylibDrawHandle) -> RenderResult {
+        RenderResult::BOOL(if self.visible {
             d.gui_button(
                 self.rect(),
                 self.text.as_deref(),
             )
         } else {
             false
-        }
+        })
     }
 }
 
