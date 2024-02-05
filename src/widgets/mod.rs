@@ -2,7 +2,6 @@ use crate::*;
 
 pub enum RenderResult {
     BOOL(bool),
-    I32(i32),
     NONE(),
 }
 
@@ -22,7 +21,19 @@ pub trait WidgetMobility {
     fn set_moving(&mut self, state: bool);
 }
 
+pub trait WidgetGeometry {
+    fn rect(&self) -> Rectangle;
+    fn set_rect(&self, rect: Rectangle);
+}
+
 pub mod window_box_obj;
 pub mod button_obj;
 pub mod image_button_obj;
 pub mod text_obj;
+
+pub enum Widget {
+    Button(ButtonObj),
+    Image_button(ImageButtonObj),
+    Window_box(WindowBoxObj),
+    Text(TextObj),
+}

@@ -1,5 +1,6 @@
 mod chunks;
 mod widgets;
+mod genv;
 
 use raylib::prelude::*;
 use raylib::ffi::KeyboardKey;
@@ -15,6 +16,7 @@ use std::ffi::{ CString };
 use std::time::Duration;
 
 use chunks::Map;
+use genv::Genv;
 
 use widgets::{
     RenderResult,
@@ -30,13 +32,6 @@ use widgets::{
 const WINDOW_WIDTH: i32 = 1920;
 const WINDOW_HEIGHT: i32 = 1080;
 const TOOLBAR_HEIGHT: i32 = 40;
-
-const EXIT_BUTTON_RECT: Rectangle = Rectangle{
-    x: (WINDOW_WIDTH - 32) as f32, 
-    y: 8.0, 
-    height: 24.0, 
-    width: 24.0,
-};
 
 const TOOLBAR_PAN_RECT: Rectangle = Rectangle{
     x: 0.0, 
@@ -103,7 +98,7 @@ fn main() {
     'mainloop: while !rl.window_should_close() {
         let mut d = rl.begin_drawing(&thread);
 
-        // helpful to compute mouse delta and get collision with widgets
+        // helpful to compute mouse delta and get collisions
         let new_mouse_pos = d.get_mouse_position();
         let new_mouse_collision_box = Rectangle{
             x: new_mouse_pos.x,
