@@ -1,8 +1,9 @@
+use std::collections::HashMap;
 use crate::*;
 
 pub enum RenderResult {
-    BOOL(bool),
-    NONE(),
+    Bool(bool),
+    None(),
 }
 
 pub trait WidgetRender {
@@ -33,7 +34,37 @@ pub mod text_obj;
 
 pub enum Widget {
     Button(ButtonObj),
-    Image_button(ImageButtonObj),
-    Window_box(WindowBoxObj),
+    ImageButton(ImageButtonObj),
+    WindowBox(WindowBoxObj),
     Text(TextObj),
+    Vec(Vec<Widget>),
+    // HashMap<Label, (Rendering Order, Widget)>
+    Map(HashMap<String, (i32, Widget)>),
+}
+
+impl<T: WidgetRender> WidgetRender for Vec<T> {
+    #[inline]
+    fn render(&self, handle: &mut RaylibDrawHandle) -> RenderResult {
+        self.iter().for_each(|x| _ = x.render(handle));
+        RenderResult::None()
+    }
+}
+
+impl<T: WidgetVisibility> WidgetVisibility for Vec<T> {
+    #[inline]
+    fn is_visible(&self) -> bool {
+        self.iter().any(|x| x.is_visible())
+    }
+    #[inline]
+    fn show(&mut self) {
+        self.iter_mut().for_each(|x| x.show())
+    }
+    #[inline]
+    fn hide(&mut self) {
+        self.iter_mut().for_each(|x| x.hide())
+    }
+    #[inline]
+    fn set_visibility(&mut self, state: bool) {
+        self.iter_mut().for_each(|x| x.set_visibility(state))
+    }
 }

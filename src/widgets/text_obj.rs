@@ -38,7 +38,7 @@ impl WidgetRender for TextObj {
             )
         };
 
-        RenderResult::NONE()
+        RenderResult::None()
     }
 }
 

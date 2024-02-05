@@ -49,7 +49,7 @@ impl ImageButtonObj {
 
 impl WidgetRender for ImageButtonObj {
     fn render(&self, d: &mut RaylibDrawHandle) -> RenderResult {
-        RenderResult::BOOL(if self.visible {
+        RenderResult::Bool(if self.visible {
             d.gui_image_button(
                 self.rect(),
                 None,

@@ -1,6 +1,5 @@
 mod chunks;
 mod widgets;
-mod genv;
 
 use raylib::prelude::*;
 use raylib::ffi::KeyboardKey;
@@ -16,7 +15,6 @@ use std::ffi::{ CString };
 use std::time::Duration;
 
 use chunks::Map;
-use genv::Genv;
 
 use widgets::{
     RenderResult,
@@ -49,14 +47,6 @@ fn main() {
 
     rl.set_exit_key(None);
 
-    let mut test_button_obj =  ButtonObj::new(
-        (WINDOW_WIDTH / 2 - 50) as f32, 
-        (WINDOW_HEIGHT / 2 + 32) as f32, 
-        100.0,
-        24.0, 
-        Some(CString::new("TEST.").expect("CString::new failed")),
-    );
-
     let mut preview_window_obj = WindowBoxObj::new(
         0.0,
         TOOLBAR_HEIGHT as f32,
@@ -65,6 +55,14 @@ fn main() {
         Some(CString::new("Preview").expect("CString::new failed")),
     );
     preview_window_obj.hide();
+
+    let mut test_button_obj =  ButtonObj::new(
+        (WINDOW_WIDTH / 2 - 50) as f32,
+        (WINDOW_HEIGHT / 2 + 32) as f32,
+        100.0,
+        24.0,
+        Some(CString::new("TEST.").expect("CString::new failed")),
+    );
 
     let mut greet_text_obj = TextObj::new(
         String::from("votai."),
@@ -114,12 +112,12 @@ fn main() {
         );
 
         match exit_imbutton_obj.render(&mut d) {
-            RenderResult::BOOL(b) => if b { break 'mainloop; },
+            RenderResult::Bool(b) => if b { break 'mainloop; },
             _ => {}
         }
 
         match test_button_obj.render(&mut d) {
-            RenderResult::BOOL(b) => if b { preview_window_obj.show(); },
+            RenderResult::Bool(b) => if b { preview_window_obj.show(); },
             _ => {}
         }
 

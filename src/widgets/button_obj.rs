@@ -1,9 +1,10 @@
 use crate::*;
-use crate::widgets::RenderResult;
+use crate::widgets::{RenderResult, Widget};
 
 use std::ffi::{CString};
 
-pub struct ButtonObj {
+pub struct ButtonObj
+{
     pub x: f32,
     pub y: f32,
     pub width: f32,
@@ -14,14 +15,14 @@ pub struct ButtonObj {
 }
 
 impl ButtonObj {
-    pub fn new(x: f32, y: f32, width: f32, height: f32, text: Option<CString>) 
-        -> ButtonObj {
+    pub fn new(x: f32, y: f32, width: f32, height: f32, text: Option<CString>)
+        -> Self {
         ButtonObj{
-            x: x,
-            y: y,
-            width: width,
-            height: height,
-            text: text,
+            x,
+            y,
+            width,
+            height,
+            text,
             visible: true,
             moving: false,
         }
@@ -39,7 +40,7 @@ impl ButtonObj {
 
 impl WidgetRender for ButtonObj {
     fn render(&self, d: &mut RaylibDrawHandle) -> RenderResult {
-        RenderResult::BOOL(if self.visible {
+        RenderResult::Bool(if self.visible {
             d.gui_button(
                 self.rect(),
                 self.text.as_deref(),

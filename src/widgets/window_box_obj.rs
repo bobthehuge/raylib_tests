@@ -14,12 +14,12 @@ pub struct WindowBoxObj {
 impl WindowBoxObj {
     pub fn new(x: f32, y: f32, width: f32, height: f32, text: Option<CString>) -> WindowBoxObj {
         WindowBoxObj{
-            x: x,
-            y: y,
-            width: width,
-            height: height,
+            x,
+            y,
+            width,
+            height,
             header_size: 24.0,
-            text: text,
+            text,
             visible: true,
             moving: false,
         }
