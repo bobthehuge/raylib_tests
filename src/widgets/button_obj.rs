@@ -10,19 +10,26 @@ pub struct ButtonObj
     pub width: f32,
     pub height: f32,
     pub text: Option<CString>,
+    pub callback: fn(RenderResult) -> RenderResult,
     visible: bool,
     moving: bool,
 }
 
 impl ButtonObj {
-    pub fn new(x: f32, y: f32, width: f32, height: f32, text: Option<CString>)
-        -> Self {
+    pub fn new(
+        x: f32, 
+        y: f32, 
+        width: f32, 
+        height: f32, 
+        text: Option<CString>, 
+        callback: fn(RenderResult)->RenderResult) -> Self {
         ButtonObj{
             x,
             y,
             width,
             height,
             text,
+            callback,
             visible: true,
             moving: false,
         }
