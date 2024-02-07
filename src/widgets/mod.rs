@@ -3,7 +3,6 @@ use crate::*;
 
 pub enum RenderResult {
     Bool(bool),
-    Widget(Widget),
     None(),
 }
 

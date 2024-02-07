@@ -1,16 +1,16 @@
 use crate::*;
-use crate::widgets::{RenderResult, Widget};
+use crate::Scope::ScopeType;
+use crate::widgets::{RenderResult};
 
 use std::ffi::{CString};
 
-pub struct ButtonObj
-{
+pub struct ButtonObj {
     pub x: f32,
     pub y: f32,
     pub width: f32,
     pub height: f32,
     pub text: Option<CString>,
-    pub callback: fn(RenderResult) -> RenderResult,
+    pub callback: Box<dyn Fn(RenderResult, &mut ScopeType)>,
     visible: bool,
     moving: bool,
 }
@@ -22,7 +22,7 @@ impl ButtonObj {
         width: f32, 
         height: f32, 
         text: Option<CString>, 
-        callback: fn(RenderResult)->RenderResult) -> Self {
+        callback: Box<dyn Fn(RenderResult, &mut ScopeType)>) -> Self {
         ButtonObj{
             x,
             y,

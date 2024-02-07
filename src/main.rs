@@ -1,5 +1,6 @@
 mod chunks;
 mod widgets;
+mod Scope;
 
 use raylib::prelude::*;
 use raylib::ffi::KeyboardKey;
@@ -27,6 +28,9 @@ use widgets::{
     image_button_obj::ImageButtonObj,
 };
 
+use crate::widgets::Widget;
+use crate::Scope::ScopeType;
+
 const WINDOW_WIDTH: i32 = 1920;
 const WINDOW_HEIGHT: i32 = 1080;
 const TOOLBAR_HEIGHT: i32 = 40;
@@ -37,6 +41,11 @@ const TOOLBAR_PAN_RECT: Rectangle = Rectangle{
     height: TOOLBAR_HEIGHT as f32,
     width: WINDOW_WIDTH as f32, 
 };
+
+const EXIT_ID: usize = 0;
+const PREVIEW_ID: usize = 1;
+const TEST_ID: usize = 2;
+
 
 fn main() {
     let (mut rl, thread) = raylib::init()
@@ -62,6 +71,17 @@ fn main() {
         100.0,
         24.0,
         Some(CString::new("TEST.").expect("CString::new failed")),
+        Box::new(|_result: RenderResult, _scope: &mut ScopeType| {
+            let RenderResult::Bool(res) = _result else { unreachable!() };
+            let ScopeType::Vector(scope) = _scope else { unreachable!() };
+
+            match &mut scope[0] {
+                Widget::WindowBox(wb) => {
+                    if res { wb.show() }
+                }
+                _ => unreachable!()
+            }
+        }),
     );
 
     let mut greet_text_obj = TextObj::new(
@@ -92,6 +112,23 @@ fn main() {
     ).unwrap();
 
     let mut old_mouse_pos = rl.get_mouse_position();
+
+    let global_scope_vec= vec![
+        Widget::ImageButton(exit_imbutton_obj),
+        Widget::WindowBox(preview_window_obj),
+        Widget::Button(test_button_obj),
+    ];
+
+    let mut global_scope = ScopeType::Vector(global_scope_vec);
+
+    let Widget::ImageButton(exit_imbutton_obj) =
+        global_scope.get(EXIT_ID) else {unreachable!()};
+
+    let Widget::WindowBox(preview_window_obj) =
+        global_scope.get(PREVIEW_ID) else {unreachable!()};
+
+    let Widget::Button(test_button_obj) =
+        global_scope.get(TEST_ID) else {unreachable!()};
 
     'mainloop: while !rl.window_should_close() {
         let mut d = rl.begin_drawing(&thread);
