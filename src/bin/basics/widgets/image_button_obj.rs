@@ -6,19 +6,26 @@ pub struct ImageButtonObj {
     pub width: f32,
     pub height: f32,
     pub tex: Texture2D,
+    pub callback: Box<dyn Fn(RenderResult, &mut ScopeType)>,
     visible: bool,
     moving: bool,
 }
 
 impl ImageButtonObj {
-    pub fn new(x: f32, y: f32, width: f32, height: f32, tex: Texture2D) 
-        -> ImageButtonObj {
+    pub fn new(
+        x: f32,
+        y: f32,
+        width: f32,
+        height: f32,
+        tex: Texture2D
+        callback: Box<dyn Fn(RenderResult, &mut ScopeType)>) -> Self {
         ImageButtonObj {
-            x: x,
-            y: y,
-            width: width,
-            height: height,
-            tex: tex,
+            x,
+            y,
+            width,
+            height,
+            tex,
+            callback,
             visible: true,
             moving: false,
         }

@@ -103,6 +103,11 @@ fn main() {
             &Image::load_image("assets/EXIT_BUTTON.png")
             .unwrap()
         ).unwrap(),
+        Box::new(|_result: RenderResult, _scope: &mut ScopeType| {
+            let RenderResult::Bool(res) = _result else { unreachable!() };
+
+            break 'mainloop;
+        })
     );
     // exit_imbutton_obj.show();
 

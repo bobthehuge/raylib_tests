@@ -7,12 +7,19 @@ pub struct WindowBoxObj {
     pub height: f32,
     pub header_size: f32,
     pub text: Option<CString>,
+    pub callback: Box<dyn Fn(RenderResult, &mut ScopeType)>,
     visible: bool,
     moving: bool,
 }
 
 impl WindowBoxObj {
-    pub fn new(x: f32, y: f32, width: f32, height: f32, text: Option<CString>) -> WindowBoxObj {
+    pub fn new(
+        x: f32,
+        y: f32,
+        width: f32,
+        height: f32,
+        text: Option<CString>
+        Box<dyn Fn(RenderResult, &mut ScopeType)>) -> Self {
         WindowBoxObj{
             x,
             y,
@@ -20,6 +27,7 @@ impl WindowBoxObj {
             height,
             header_size: 24.0,
             text,
+            callback,
             visible: true,
             moving: false,
         }
