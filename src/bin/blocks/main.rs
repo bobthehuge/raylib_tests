@@ -7,6 +7,7 @@ use std::time::Duration;
 
 const WINDOW_WIDTH: i32 = 640;
 const WINDOW_HEIGHT: i32 = 480;
+const SELECTION_BOX_SIZE: f32 = 5.0;
 
 struct Clickable {
     pub rect: Rectangle,
@@ -44,43 +45,45 @@ fn integer_decode(val: f64) -> (u64, i16, i8) {
 }
 
 #[derive(Hash, Eq, PartialEq)]
-struct IEE_F64((u64, i16, i8));
+struct IeeF64((u64, i16, i8));
 
-impl IEE_F64 {
+impl IeeF64 {
     fn new(val: f64) -> Self {
-        IEE_F64(integer_decode(val))
+        IeeF64(integer_decode(val))
     }
 }
 
 #[derive(Hash, Eq, PartialEq)]
-struct Vec2IEE_F64 {
-    x: IEE_F64,
-    y: IEE_F64,
+struct Vec2ieeF64 {
+    x: IeeF64,
+    y: IeeF64,
 }
 
-impl Vec2IEE_F64 {
+impl Vec2ieeF64 {
     fn new(x: f64, y: f64) -> Self {
-        Vec2IEE_F64{x:IEE_F64::new(x), y:IEE_F64::new(y)}
+        Vec2ieeF64 {x: IeeF64::new(x), y: IeeF64::new(y)}
     }
 }
 
 fn main() {
-    let (mut rl, thread) = raylib::init()
+    let (mut rl, thread) = init()
         .size(WINDOW_WIDTH, WINDOW_HEIGHT)
         .title("Raylib Widgets")
         .build();
-    
-    let mut objs_map: HashMap<Vec2IEE_F64, Clickable> = HashMap::new();
+
+    let mut objs_map: HashMap<Vec2ieeF64, Clickable> = HashMap::new();
     let mut count = 0i32;
     let mut objs_add_ready = true;
 
+    let mut selection_box = Rectangle::default();
+    let _ = rl.begin_drawing(&thread).clear_background(Color::LIGHTGRAY);
 
     while !rl.window_should_close() {
         let mut d = rl.begin_drawing(&thread);
 
         // helpful to compute mouse delta and get collisions
         let new_mouse_pos = d.get_mouse_position();
-        let new_mouse_box = Rectangle{
+        let _new_mouse_box = Rectangle{
             x: new_mouse_pos.x,
             y: new_mouse_pos.y,
             width: 1.0,
@@ -88,21 +91,51 @@ fn main() {
         };
         
         if d.is_mouse_button_down(MouseButton::MOUSE_LEFT_BUTTON) && objs_add_ready {
-            objs_add_ready = false;
-            count += 1;
-            objs_map.insert(
-                Vec2IEE_F64::new(new_mouse_pos.x as f64, new_mouse_pos.y as f64),
-                Clickable::new(
-                    Rectangle::new(
-                        new_mouse_pos.x, 
-                        new_mouse_pos.y,
-                        50.0,
-                        24.0,
-                    ), 
-                    format!("TEST_{}", count))
-            );
+            let _ = d.draw_rectangle_lines_ex(selection_box, 2, Color::LIGHTGRAY);
 
-            println!("added object n°{}", count);
+            let collision = objs_map.iter()
+                .find(|(_, x)|
+                    x.rect.check_collision_circle_rec(
+                        Vector2{
+                            x: new_mouse_pos.x,
+                            y: new_mouse_pos.y,
+                        },
+                        SELECTION_BOX_SIZE * 2.0,
+                    )
+                );
+
+            match collision {
+                Some((_, v)) => {
+                    selection_box = Rectangle::new(
+                        v.rect.x - SELECTION_BOX_SIZE,
+                        v.rect.y - SELECTION_BOX_SIZE,
+                        v.rect.width + SELECTION_BOX_SIZE * 2.0,
+                        v.rect.height + SELECTION_BOX_SIZE * 2.0,
+                    );
+                },
+                _ => {
+                    objs_add_ready = false;
+                    selection_box = Rectangle::new(
+                        new_mouse_pos.x - SELECTION_BOX_SIZE,
+                        new_mouse_pos.y - SELECTION_BOX_SIZE,
+                        50.0 + SELECTION_BOX_SIZE * 2.0,
+                        24.0 + SELECTION_BOX_SIZE * 2.0,
+                    );
+                    count += 1;
+                    objs_map.insert(
+                        Vec2ieeF64::new(new_mouse_pos.x as f64, new_mouse_pos.y as f64),
+                        Clickable::new(
+                            Rectangle::new(
+                                new_mouse_pos.x,
+                                new_mouse_pos.y,
+                                50.0,
+                                24.0,
+                            ),
+                            format!("TEST_{}", count))
+                    );
+                    println!("added object n°{}", count);
+                }
+            }
         }
 
         if d.is_mouse_button_up(MouseButton::MOUSE_LEFT_BUTTON) {
@@ -114,12 +147,30 @@ fn main() {
                 objs_add_ready{
             count = 0;
             objs_map.clear();
+            selection_box = Rectangle::default();
+            d.clear_background(Color::LIGHTGRAY);
         }
 
-        d.clear_background(Color::WHITE);
+        if d.is_key_pressed(KeyboardKey::KEY_BACKSPACE) {
+            let x = selection_box.x + SELECTION_BOX_SIZE;
+            let y = selection_box.y + SELECTION_BOX_SIZE;
+
+            let target = objs_map.remove(&Vec2ieeF64::new(x as f64, y as f64));
+
+            match target {
+                Some(_) => {
+                    println!("Removed object '{}'", target.unwrap().text);
+                    let _ = d.draw_rectangle_rec(selection_box, Color::LIGHTGRAY);
+                    count -= 1;
+                    selection_box = Rectangle::default();
+                }
+                None => {}
+            }
+        }
 
         objs_map.iter().for_each(|(_,x)| x.render(&mut d));
+        let _ = d.draw_rectangle_lines_ex(selection_box, 2, Color::RED);
     }
 
-    ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+    std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
 }
