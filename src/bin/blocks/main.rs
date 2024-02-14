@@ -1,3 +1,6 @@
+pub mod widgets;
+pub mod editor;
+
 use raylib::prelude::*;
 
 use std::collections::HashMap;
@@ -5,30 +8,12 @@ use std::mem;
 use std::ffi::CString;
 use std::time::Duration;
 
+use crate::widgets::*;
+use crate::editor::*;
+
 const WINDOW_WIDTH: i32 = 640;
 const WINDOW_HEIGHT: i32 = 480;
 const SELECTION_BOX_SIZE: f32 = 5.0;
-
-struct Clickable {
-    pub rect: Rectangle,
-    pub text: String,
-}
-
-impl Clickable {
-    fn new(rect: Rectangle, text: String) -> Self {
-        Clickable{
-            rect,
-            text,
-        }
-    }
-
-    fn render(&self, handle: &mut RaylibDrawHandle) {
-        let _ = handle.gui_button(
-            self.rect,
-            Some(&CString::new(&*self.text).expect("CString::new failed")),
-        );
-    }
-}
 
 fn integer_decode(val: f64) -> (u64, i16, i8) {
     let bits: u64 = unsafe { mem::transmute(val) };
@@ -71,12 +56,15 @@ fn main() {
         .title("Raylib Widgets")
         .build();
 
+    let mut editor = Editor::new();
     let mut objs_map: HashMap<Vec2ieeF64, Clickable> = HashMap::new();
     let mut count = 0i32;
     let mut objs_add_ready = true;
 
     let mut selection_box = Rectangle::default();
     let _ = rl.begin_drawing(&thread).clear_background(Color::LIGHTGRAY);
+
+    editor.enter_render();
 
     while !rl.window_should_close() {
         let mut d = rl.begin_drawing(&thread);
@@ -90,9 +78,7 @@ fn main() {
             height: 1.0,
         };
         
-        if d.is_mouse_button_down(MouseButton::MOUSE_LEFT_BUTTON) && objs_add_ready {
-            let _ = d.draw_rectangle_lines_ex(selection_box, 2, Color::LIGHTGRAY);
-
+        if d.is_mouse_button_down(MouseButton::MOUSE_LEFT_BUTTON) {
             let collision = objs_map.iter()
                 .find(|(_, x)|
                     x.rect.check_collision_circle_rec(
@@ -131,7 +117,18 @@ fn main() {
                                 50.0,
                                 24.0,
                             ),
-                            format!("TEST_{}", count))
+                            format!("TEST_{}", count),
+                            |obj, res| { 
+                                match res {
+                                    WidgetResult::Bool(pressed) => {
+                                        if pressed {
+                                            println!("Pressed button n°{}", obj.text)
+                                        }
+                                    }
+                                    _ => {}
+                                }
+                            },
+                        )
                     );
                     println!("added object n°{}", count);
                 }
@@ -143,33 +140,43 @@ fn main() {
         }
 
         if d.is_key_down(KeyboardKey::KEY_LEFT_CONTROL) && 
-            d.is_key_pressed(KeyboardKey::KEY_R) && 
-                objs_add_ready{
+            d.is_key_pressed(KeyboardKey::KEY_R) && objs_add_ready {
+
             count = 0;
             objs_map.clear();
             selection_box = Rectangle::default();
+        }
+
+//////////////////////////////// DRAWING PHASE ////////////////////////////////
+
+        if editor.is_mode_render() {
             d.clear_background(Color::LIGHTGRAY);
-        }
 
-        if d.is_key_pressed(KeyboardKey::KEY_BACKSPACE) {
-            let x = selection_box.x + SELECTION_BOX_SIZE;
-            let y = selection_box.y + SELECTION_BOX_SIZE;
+            if d.is_key_pressed(KeyboardKey::KEY_BACKSPACE) {
+                let x = selection_box.x + SELECTION_BOX_SIZE;
+                let y = selection_box.y + SELECTION_BOX_SIZE;
 
-            let target = objs_map.remove(&Vec2ieeF64::new(x as f64, y as f64));
+                let target = objs_map.remove(&Vec2ieeF64::new(x as f64, y as f64));
 
-            match target {
-                Some(_) => {
-                    println!("Removed object '{}'", target.unwrap().text);
-                    let _ = d.draw_rectangle_rec(selection_box, Color::LIGHTGRAY);
-                    count -= 1;
-                    selection_box = Rectangle::default();
+                match target {
+                    Some(_) => {
+                        println!("Removed object '{}'", target.unwrap().text);
+                        let _ = d.draw_rectangle_rec(selection_box, Color::LIGHTGRAY);
+                        count -= 1;
+                        selection_box = Rectangle::default();
+                    }
+                    None => {}
                 }
-                None => {}
             }
-        }
 
-        objs_map.iter().for_each(|(_,x)| x.render(&mut d));
-        let _ = d.draw_rectangle_lines_ex(selection_box, 2, Color::RED);
+            objs_map.iter_mut().for_each(|(_,x)| { 
+                x.render(&mut d); 
+            });
+
+            let _ = d.draw_rectangle_lines_ex(selection_box, 2, Color::RED);
+
+            editor.edit_mode();
+        }
     }
 
     std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
