@@ -4,6 +4,7 @@ use raylib::prelude::*;
 pub struct Editor {
     mode: EditorMode,
     next_mode: EditorMode,
+    locked: bool,
 }
 
 #[derive(PartialEq, Clone, Copy)]
@@ -20,6 +21,7 @@ impl Editor {
         Editor {
             mode: EditorMode::Init,
             next_mode: EditorMode::Render,
+            locked: false,
         }
     }
 
@@ -29,42 +31,35 @@ impl Editor {
     }
 
     #[inline]
-    pub fn set_mode(&mut self, mode: EditorMode) {
-        self.mode = mode
-    }
+    pub fn set_mode(&mut self, mode: EditorMode) { self.mode = mode }
 
     #[inline]
-    pub fn edit_mode(&mut self) {
-        self.next_mode = EditorMode::Edit
-    }
+    pub fn set_next_mode(&mut self, mode: EditorMode) { self.next_mode = mode }
 
     #[inline]
-    pub fn is_mode_edit(&self) -> bool {
-        self.mode == EditorMode::Edit
-    }
+    pub fn repeat_mode(&mut self) { self.next_mode = self.mode }
 
     #[inline]
-    pub fn is_next_mode_edit(&self) -> bool {
-        self.mode == EditorMode::Edit
-    }
+    pub fn is_mode(&self, mode: EditorMode) -> bool { self.mode == mode }
 
     #[inline]
-    pub fn render_mode(&mut self) {
-        self.mode = EditorMode::Render
-    }
+    pub fn is_next_mode(&self, mode: EditorMode) -> bool { self.next_mode == mode }
 
     #[inline]
-    pub fn is_mode_render(&self) -> bool {
-        self.mode == EditorMode::Render
-    }
+    pub fn is_mode_locked(&self) -> bool { self.locked }
 
     #[inline]
-    pub fn exit_mode(&mut self) {
-        self.mode = EditorMode::Exit
-    }
+    pub fn lock_mode(&mut self) { self.locked = true }
 
     #[inline]
-    pub fn is_mode_exit(&self) -> bool {
-        self.mode == EditorMode::Exit
+    pub fn unlock_mode(&mut self) { self.locked = false }
+
+    pub fn cycle_mode(&mut self) {
+        if self.is_mode_locked() {
+            self.repeat_mode();
+        } else {
+            self.mode = self.next_mode;
+            self.next_mode = EditorMode::None;
+        }
     }
 }

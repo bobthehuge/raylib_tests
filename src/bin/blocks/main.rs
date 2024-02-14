@@ -64,7 +64,7 @@ fn main() {
     let mut selection_box = Rectangle::default();
     let _ = rl.begin_drawing(&thread).clear_background(Color::LIGHTGRAY);
 
-    editor.enter_render();
+    editor.set_mode(EditorMode::Edit);
 
     while !rl.window_should_close() {
         let mut d = rl.begin_drawing(&thread);
@@ -79,6 +79,8 @@ fn main() {
         };
         
         if d.is_mouse_button_down(MouseButton::MOUSE_LEFT_BUTTON) {
+            editor.set_mode(EditorMode::Edit);
+
             let collision = objs_map.iter()
                 .find(|(_, x)|
                     x.rect.check_collision_circle_rec(
@@ -100,6 +102,8 @@ fn main() {
                     );
                 },
                 _ => {
+                    editor.lock_mode();
+
                     objs_add_ready = false;
                     selection_box = Rectangle::new(
                         new_mouse_pos.x - SELECTION_BOX_SIZE,
@@ -122,7 +126,7 @@ fn main() {
                                 match res {
                                     WidgetResult::Bool(pressed) => {
                                         if pressed {
-                                            println!("Pressed button n°{}", obj.text)
+                                            println!("Pressed button {}", obj.text)
                                         }
                                     }
                                     _ => {}
@@ -137,6 +141,7 @@ fn main() {
 
         if d.is_mouse_button_up(MouseButton::MOUSE_LEFT_BUTTON) {
             objs_add_ready = true;
+            editor.unlock_mode();
         }
 
         if d.is_key_down(KeyboardKey::KEY_LEFT_CONTROL) && 
@@ -147,9 +152,13 @@ fn main() {
             selection_box = Rectangle::default();
         }
 
+        if !editor.is_mode_locked() {
+            editor.set_mode(EditorMode::Render);
+        }
+
 //////////////////////////////// DRAWING PHASE ////////////////////////////////
 
-        if editor.is_mode_render() {
+        if editor.is_mode(EditorMode::Render) || true {
             d.clear_background(Color::LIGHTGRAY);
 
             if d.is_key_pressed(KeyboardKey::KEY_BACKSPACE) {
@@ -175,8 +184,10 @@ fn main() {
 
             let _ = d.draw_rectangle_lines_ex(selection_box, 2, Color::RED);
 
-            editor.edit_mode();
+            editor.set_next_mode(EditorMode::Edit);
         }
+
+        editor.cycle_mode();
     }
 
     std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
