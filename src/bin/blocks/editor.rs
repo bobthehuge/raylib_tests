@@ -37,6 +37,12 @@ impl Editor {
     pub fn set_next_mode(&mut self, mode: EditorMode) { self.next_mode = mode }
 
     #[inline]
+    pub fn set_modes(&mut self, mode: EditorMode, next_mode: EditorMode) {
+        self.mode = mode;
+        self.next_mode = next_mode;
+    }
+
+    #[inline]
     pub fn repeat_mode(&mut self) { self.next_mode = self.mode }
 
     #[inline]
