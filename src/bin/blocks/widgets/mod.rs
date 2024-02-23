@@ -1,18 +1,31 @@
-pub mod clickable;
+pub mod block;
+pub mod button;
 
-use std::ffi::CString;
-use std::collections::HashMap;
 use raylib::prelude::*;
+use std::collections::HashMap;
+use std::ffi::CString;
 
 use crate::Vec2ieeF64;
-use crate::clickable::*;
+use crate::widgets::button::*;
+use crate::widgets::block::*;
 
 pub trait WidgetRender {
     fn render(&mut self, handle: &mut RaylibDrawHandle) -> WidgetResult;
 }
 
-pub trait WidgetReady {
-    fn ready(&mut self);
+pub trait WidgetRectangle: WidgetRender {
+    fn get_rect(&self) -> Rectangle;
+    fn set_rect(&mut self, rect: Rectangle);
+}
+
+pub trait WidgetCollidable: WidgetRectangle {
+    fn check_rect_collision(&self, rect: Rectangle) -> bool;
+    fn check_circ_collision(&self, center: Vector2, radius: f32) -> bool;
+}
+
+pub trait WidgetId: WidgetRender {
+    fn get_id(&self) -> &String;
+    fn set_id(&mut self, text: String);
 }
 
 pub enum WidgetResult {
@@ -20,34 +33,19 @@ pub enum WidgetResult {
     None,
 }
 
-pub struct Widget {
-    pub comps: HashMap<Vec2ieeF64, &dyn WidgetRender>,
-    pub ready: bool,
-    pub callback: fn(&Self, Vec<WidgetResult>) -> WidgetResult,
-}
+// pub enum Widget {
+//     Block(Block),
+//     Button(Button),
+//     Text(Text),
+// }
 
-impl Widget {
-    pub fn new(
-        callback: fn(&Self, WidgetResult) -> WidgetResult ) -> Self {
-        Widget {
-            comps: HashMap::new(),
-            ready: false,
-            callback,
-        }
-    }
-}
-
-impl WidgetRender for Widget {
-    fn render(
-        &mut self,
-        handle: &mut RaylibDrawHandle
-    ) -> WidgetResult {
-        let res = self.comps
-            .iter_mut()
-            .map(|(_,x)| x.render(handle))
-            .collect::<Vec<WidgetResult>>();
-
-        if self.ready { (self.callback)(&self, res) }
-        else { WidgetResult::Bool(false) }
-    }
+pub trait Widget {
+    fn as_widget_render(&self) -> Option<&dyn WidgetRender> { None }
+    fn as_widget_render_mut(&mut self) -> Option<&mut dyn WidgetRender> { None }
+    fn as_widget_rectangle(&self) -> Option<&dyn WidgetRectangle> { None }
+    fn as_widget_rectangle_mut(&mut self) -> Option<&mut dyn WidgetRectangle> { None }
+    fn as_widget_collidable(&self) -> Option<&dyn WidgetCollidable> { None }
+    fn as_widget_collidable_mut(&mut self) -> Option<&mut dyn WidgetCollidable> { None }
+    fn as_widget_id(&self) -> Option<&dyn WidgetId> { None }
+    fn as_widget_id_mut(&mut self) -> Option<&mut dyn WidgetId> { None }
 }

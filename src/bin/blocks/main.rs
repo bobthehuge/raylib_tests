@@ -10,7 +10,8 @@ use std::time::Duration;
 
 use crate::editor::*;
 use crate::widgets::*;
-use crate::widgets::clickable::*;
+use crate::widgets::button::*;
+use crate::widgets::block::*;
 
 const WINDOW_WIDTH: i32 = 640;
 const WINDOW_HEIGHT: i32 = 480;
@@ -60,7 +61,7 @@ fn main() {
 
     let mut editor = Editor::new();
     // let mut objs_map: HashMap<Vec2ieeF64, Clickable> = HashMap::new();
-    let mut objs_map = Widget::new(|_,_| WidgetResult::Bool(true));
+    let mut objs_map = Block::new(|_,_| WidgetResult::Bool(true));
     let mut count = 0i32;
     let mut objs_add_ready = true;
 
@@ -82,24 +83,32 @@ fn main() {
         };
         
         if d.is_mouse_button_down(MouseButton::MOUSE_LEFT_BUTTON) {
-            let collision = objs_map.comps.iter()
+            let target = objs_map.comps
+                .iter()
                 .find(|(_, x)|
-                    x.rect.check_collision_circle_rec(
-                        Vector2{
-                            x: new_mouse_pos.x,
-                            y: new_mouse_pos.y,
+                    match x {
+                        Widget::Button(c) => {
+                            c.get_rect().check_collision_circle_rec(
+                                Vector2{
+                                    x: new_mouse_pos.x,
+                                    y: new_mouse_pos.y,
+                                },
+                                SELECTION_BOX_SIZE * 2.0,
+                            )
                         },
-                        SELECTION_BOX_SIZE * 2.0,
-                    )
+                        _ => false
+                    }
                 );
 
-            match collision {
-                Some((_, v)) => {
+            match target {
+                Some((_, Widget::Button(v))) => {
+                    // let Widget::Collidable(v) = c else { unreachable!() };
+
                     selection_box = Rectangle::new(
-                        v.rect.x - SELECTION_BOX_SIZE,
-                        v.rect.y - SELECTION_BOX_SIZE,
-                        v.rect.width + SELECTION_BOX_SIZE * 2.0,
-                        v.rect.height + SELECTION_BOX_SIZE * 2.0,
+                        v.get_rect().x - SELECTION_BOX_SIZE,
+                        v.get_rect().y - SELECTION_BOX_SIZE,
+                        v.get_rect().width + SELECTION_BOX_SIZE * 2.0,
+                        v.get_rect().height + SELECTION_BOX_SIZE * 2.0,
                     );
                 },
                 _ => {
@@ -115,7 +124,7 @@ fn main() {
                     count += 1;
                     objs_map.comps.insert(
                         Vec2ieeF64::new(new_mouse_pos.x as f64, new_mouse_pos.y as f64),
-                        &Clickable::new(
+                        Box::new(Button::new(
                             Rectangle::new(
                                 new_mouse_pos.x,
                                 new_mouse_pos.y,
@@ -135,9 +144,9 @@ fn main() {
 
                                 WidgetResult::Bool(true)
                             },
-                        )
+                        ))
                     );
-                    println!("added object n°{}", count);
+                    println!("Added object n°{}", count);
                 }
             }
         }
@@ -162,13 +171,17 @@ fn main() {
             let target = objs_map.comps.remove(&Vec2ieeF64::new(x as f64, y as f64));
 
             match target {
-                Some(_) => {
-                    println!("Removed object '{}'", target.unwrap().text);
-                    // let _ = d.draw_rectangle_rec(selection_box, BG_COLOR);
-                    count -= 1;
-                    selection_box = Rectangle::default();
+                Some(b) => {
+                    match b.as_widget_id() {
+                        Some(b) => {
+                            println!("Removed object '{}'", b.get_id());
+                            count -= 1;
+                            selection_box = Rectangle::default();
+                        }
+                        _ => {}
+                    }
                 }
-                None => {}
+                _ => {}
             }
         }
 
@@ -180,7 +193,12 @@ fn main() {
 
         if d.is_mouse_button_up(MouseButton::MOUSE_LEFT_BUTTON) {
             objs_add_ready = true;
-            objs_map.comps.iter().for_each(|(_,x)| { *x.ready() });
+            objs_map.comps.iter_mut().for_each(|(_,x)| { 
+                match x {
+                    Widget::Button(b) => { b.ready(); },
+                    _ => {}
+                }
+            });
         }
     }
 
