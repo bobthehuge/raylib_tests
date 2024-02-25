@@ -1,44 +1,25 @@
-use crate::*;
 use crate::widgets::*;
 use raylib::prelude::*;
-use std::ffi::CString;
 
 pub struct Button {
     pub rect: Rectangle,
-    pub text: String,
+    pub id: String,
     pub ready: bool,
-    pub callback: fn(&Self, WidgetResult) -> WidgetResult,
+    pub callback: fn(&Self, &WidgetResult),
 }
 
 impl Button {
     pub fn new(
         rect: Rectangle,
-        text: String,
-        callback: fn(&Self, WidgetResult) -> WidgetResult) -> Self {
-        Button {
+        id: String,
+        callback: fn(&Self, &WidgetResult)
+    ) -> Self {
+        Self {
             rect,
-            text,
+            id,
             ready: false,
             callback,
         }
-    }
-
-    pub fn ready(&mut self) { self.ready = true }
-    pub fn unready(&mut self) { self.ready = false }
-}
-
-impl WidgetRender for Button {
-    fn render(
-        &mut self,
-        handle: &mut RaylibDrawHandle
-    ) -> WidgetResult {
-        let res = WidgetResult::Bool(handle.gui_button(
-            self.rect,
-            None,
-        ));
-
-        if self.ready { (self.callback)(&self, res) }
-        else { WidgetResult::Bool(false) }
     }
 }
 
@@ -62,26 +43,28 @@ impl WidgetCollidable for Button {
     }
 }
 
-impl WidgetId for Button {
-    fn get_id(&self) -> &String {
-        &self.text
-    }
-
-    fn set_id(&mut self, text: String) {
-        self.text = text
-    }
-}
-
 impl Widget for Button {
-    fn as_widget_render(&self) ->
-        Option<&dyn WidgetRender> {
-            Some(self as _)
-        }
+    fn render(
+        &mut self,
+        handle: &mut RaylibDrawHandle
+    ) -> WidgetResult {
+        WidgetResult::Bool(handle.gui_button(
+            self.rect,
+            None,
+        ))
+    }
 
-    fn as_widget_render_mut(&mut self) ->
-        Option<&mut dyn WidgetRender> {
-            Some(self as _)
-        }
+    fn call(&mut self, handle: &mut RaylibDrawHandle) -> WidgetResult{
+        let res = self.render(handle);
+        if self.is_ready() { (self.callback)(&self, &res); }
+        res
+    }
+
+    fn ready(&mut self) { self.ready = true }
+    fn unready(&mut self) { self.ready = false }
+    fn is_ready(&self) -> bool { self.ready }
+    fn get_id(&self) -> &String { &self.id }
+    fn set_id(&mut self, id: String) { self.id = id }
 
     fn as_widget_rectangle(&self) ->
         Option<&dyn WidgetRectangle> {
@@ -100,16 +83,6 @@ impl Widget for Button {
 
     fn as_widget_collidable_mut(&mut self) ->
         Option<&mut dyn WidgetCollidable> {
-            Some(self as _)
-        }
-
-    fn as_widget_id(&self) ->
-        Option<&dyn WidgetId> {
-            Some(self as _)
-        }
-
-    fn as_widget_id_mut(&mut self) ->
-        Option<&mut dyn WidgetId> {
             Some(self as _)
         }
 }
